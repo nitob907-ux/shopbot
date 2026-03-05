@@ -6,9 +6,9 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 
 BOT_TOKEN = "8762699505:AAEZfO5dOWb_1Ne7H1bFWStuksMGk7iD4x8"
-ADMIN_USERNAME = "nirobfileshopbot"
+ADMIN_USERNAME = "nirobexe"
 PAYMENT_NUMBER = "01831297268"
-ADMIN_CHAT_ID = None  # Will be set
+ADMIN_CHAT_ID = None  # Will be set when admin uses /start
 
 PRODUCTS = {
     "multispace": {
