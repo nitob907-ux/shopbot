@@ -8,6 +8,8 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 BOT_TOKEN = "8762699505:AAEZfO5dOWb_1Ne7H1bFWStuksMGk7iD4x8"
 ADMIN_USERNAME = "nirobfileshopbot"
 PAYMENT_NUMBER = "01831297268"
+ADMIN_CHAT_ID = None  # Will be set when admin uses /start
+
 PRODUCTS = {
     "multispace": {
         "name": "Multispace APK",
@@ -25,6 +27,9 @@ PRODUCTS = {
         "link": "https://drive.google.com/file/d/1vHj54HSfvIhyIuDzWHmLjT9LdN_LCBlM/view?usp=drivesdk"
     },
 }
+
+# pending_orders: {user_id: product_key}
+pending_orders = {}
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -47,6 +52,18 @@ def run_web_server():
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global ADMIN_CHAT_ID
+    user = update.effective_user
+    if user.username and user.username.lower() == ADMIN_USERNAME.lower():
+        ADMIN_CHAT_ID = update.effective_chat.id
+        await update.message.reply_text(
+            f"👑 Admin panel e swagotom!\n\n"
+            f"Pending orders dekhte: /orders\n"
+            f"Approve korte: /approve USER_ID\n\n"
+            f"Admin chat ID: {ADMIN_CHAT_ID}"
+        )
+        return
+
     keyboard = [
         [InlineKeyboardButton("🛍️ Ponno Dekhun", callback_data="products")],
         [InlineKeyboardButton("📞 Support", callback_data="support")],
@@ -55,6 +72,48 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🤖 Nirob File Shop e swagotom!\nNiche button theke ponno dekhun o order korun.",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
+
+
+async def orders_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    if not user.username or user.username.lower() != ADMIN_USERNAME.lower():
+        return
+    if not pending_orders:
+        await update.message.reply_text("📭 Kono pending order nei.")
+        return
+    msg = "📋 Pending Orders:\n\n"
+    for uid, pkey in pending_orders.items():
+        p = PRODUCTS.get(pkey, {})
+        msg += f"👤 User ID: {uid}\n📦 Product: {p.get('name', pkey)}\n💰 Price: {p.get('price', '?')} TK\nApprove: /approve {uid}\n\n"
+    await update.message.reply_text(msg)
+
+
+async def approve_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    if not user.username or user.username.lower() != ADMIN_USERNAME.lower():
+        return
+    if not context.args:
+        await update.message.reply_text("Usage: /approve USER_ID")
+        return
+    try:
+        uid = int(context.args[0])
+    except ValueError:
+        await update.message.reply_text("Invalid user ID.")
+        return
+    if uid not in pending_orders:
+        await update.message.reply_text(f"User {uid} er kono pending order nei.")
+        return
+    pkey = pending_orders.pop(uid)
+    product = PRODUCTS.get(pkey)
+    if product:
+        await context.bot.send_message(
+            chat_id=uid,
+            text=f"✅ Payment confirm hoyeche!\n\n"
+                 f"📦 {product['name']} er download link:\n\n"
+                 f"👇 {product['link']}\n\n"
+                 f"Dhonnobad amader shop e order korar jonno! 🙏"
+        )
+        await update.message.reply_text(f"✅ User {uid} ke link pathano hoyeche!")
 
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -77,13 +136,14 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         key = data[4:]
         product = PRODUCTS.get(key)
         if product:
+            user_id = query.from_user.id
+            pending_orders[user_id] = key
             await query.edit_message_text(
-                f"✅ {product['name']} order korte:\n\n"
+                f"✅ {product['name']} order:\n\n"
                 f"💰 Mullo: {product['price']} TK\n\n"
                 f"📲 Bkash/Nagad: {PAYMENT_NUMBER}\n\n"
-                f"Payment korার por screenshot pathan Admin ke.\n"
-                f"Admin: @{ADMIN_USERNAME}\n\n"
-                f"⬇️ APK download link payment er por pathano hobe.",
+                f"⚠️ Payment korar por niche screenshot pathao!\n"
+                f"Screenshot pathanor por admin verify korbe o link pathabe.",
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("🔙 Back", callback_data="products")]
                 ])
@@ -109,6 +169,30 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    uid = user.id
+
+    # If user has pending order and sends photo (screenshot)
+    if update.message.photo and uid in pending_orders:
+        pkey = pending_orders.get(uid)
+        product = PRODUCTS.get(pkey, {})
+        # Notify admin
+        if ADMIN_CHAT_ID:
+            await context.bot.send_photo(
+                chat_id=ADMIN_CHAT_ID,
+                photo=update.message.photo[-1].file_id,
+                caption=f"💰 Notun payment screenshot!\n\n"
+                        f"👤 User: {user.full_name}\n"
+                        f"🆔 User ID: {uid}\n"
+                        f"📦 Product: {product.get('name', pkey)}\n"
+                        f"💵 Price: {product.get('price', '?')} TK\n\n"
+                        f"Approve korte: /approve {uid}"
+            )
+        await update.message.reply_text(
+            "✅ Screenshot pathano hoyeche!\nAdmin verify korle apnake link pathabe. Ektu opekha korun. 🙏"
+        )
+        return
+
     await update.message.reply_text("/start likun othoba button use korun.")
 
 
@@ -118,8 +202,10 @@ def main():
     logger.info("Web server started")
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("orders", orders_command))
+    app.add_handler(CommandHandler("approve", approve_command))
     app.add_handler(CallbackQueryHandler(button_handler))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    app.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, handle_message))
     logger.info("Bot started!")
     app.run_polling()
 
