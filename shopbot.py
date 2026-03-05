@@ -8,7 +8,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 BOT_TOKEN = "8762699505:AAEZfO5dOWb_1Ne7H1bFWStuksMGk7iD4x8"
 ADMIN_USERNAME = "nirobfileshopbot"
 PAYMENT_NUMBER = "01831297268"
-ADMIN_CHAT_ID = None  # Will be set when admin uses /start
+ADMIN_CHAT_ID = None  # Will be set
 
 PRODUCTS = {
     "multispace": {
