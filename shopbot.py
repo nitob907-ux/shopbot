@@ -7,6 +7,7 @@ from telegram.ext import (
     MessageHandler, filters, ContextTypes
 )
 
+# ─── CONFIG ───────────────────────────────────────────────────────────────────
 BOT_TOKEN = "8762699505:AAEZfO5dOWb_1Ne7H1bFWStuksMGk7iD4x8"
 ADMIN_USERNAME = "nirobfileshopbot"
 PAYMENT_NUMBER = "01831297268"
@@ -20,26 +21,32 @@ PRODUCTS = {
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# ─── WEB SERVER (keeps Render alive) ──────────────────────────────────────────
 class PingHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b"Nirob Shop Bot is running!")
+
     def log_message(self, format, *args):
-        pass
+        pass  # silence access logs
 
-import os
-port = int(os.environ.get("PORT", 8080))
-server = HTTPServer(("0.0.0.0", port), PingHandler)
+def run_web_server():
+    server = HTTPServer(("0.0.0.0", 8080), PingHandler)
+    server.serve_forever()
 
+# ─── BOT HANDLERS ─────────────────────────────────────────────────────────────
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("Ponno Dekhun", callback_data="products")],
-        [InlineKeyboardButton("Support", callback_data="support")],
+        [InlineKeyboardButton("🛍️ পণ্য দেখুন", callback_data="products")],
+        [InlineKeyboardButton("📞 সাপোর্ট", callback_data="support")],
     ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text(
-        "Nirob File Shop e swagotom!\nNiche button theke ponno dekhun.",
-        reply_markup=InlineKeyboardMarkup(keyboard)
+        "🤖 *Nirob File Shop* এ স্বাগতম!\n\n"
+        "নিচের বাটন থেকে পণ্য দেখুন এবং অর্ডার করুন।",
+        parse_mode="Markdown",
+        reply_markup=reply_markup
     )
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -49,12 +56,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if data == "products":
         keyboard = [
-            [InlineKeyboardButton(f"{p['name']} - {p['price']} TK", callback_data=f"buy_{key}")]
+            [InlineKeyboardButton(f"📦 {p['name']} — {p['price']} TK", callback_data=f"buy_{key}")]
             for key, p in PRODUCTS.items()
         ]
-        keyboard.append([InlineKeyboardButton("Back", callback_data="back")])
+        keyboard.append([InlineKeyboardButton("🔙 ফিরে যান", callback_data="back")])
         await query.edit_message_text(
-            "Amader ponnosamuho:",
+            "🛍️ *আমাদের পণ্যসমূহ:*\n\nকিনতে চাইলে নিচের বাটনে চাপুন।",
+            parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
@@ -63,45 +71,56 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         product = PRODUCTS.get(key)
         if product:
             await query.edit_message_text(
-                f"{product['name']} order korte:\n\n"
-                f"Mullo: {product['price']} TK\n\n"
-                f"Bkash/Nagad: {PAYMENT_NUMBER}\n\n"
-                f"Payment er por screenshot pathan.\n"
+                f"✅ *{product['name']}* অর্ডার করতে:\n\n"
+                f"💰 মূল্য: *{product['price']} TK*\n\n"
+                f"📲 বিকাশ/নগদ: `{PAYMENT_NUMBER}`\n\n"
+                f"পেমেন্ট করার পর স্ক্রিনশট পাঠান।\n"
                 f"Admin: @{ADMIN_USERNAME}",
+                parse_mode="Markdown",
                 reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("Back", callback_data="products")]
+                    [InlineKeyboardButton("🔙 পণ্যে ফিরুন", callback_data="products")]
                 ])
             )
 
     elif data == "support":
         await query.edit_message_text(
-            f"Support:\nAdmin: @{ADMIN_USERNAME}\nBkash/Nagad: {PAYMENT_NUMBER}",
+            f"📞 *সাপোর্ট:*\n\nAdmin: @{ADMIN_USERNAME}\n"
+            f"বিকাশ/নগদ: `{PAYMENT_NUMBER}`",
+            parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("Back", callback_data="back")]
+                [InlineKeyboardButton("🔙 ফিরে যান", callback_data="back")]
             ])
         )
 
     elif data == "back":
         keyboard = [
-            [InlineKeyboardButton("Ponno Dekhun", callback_data="products")],
-            [InlineKeyboardButton("Support", callback_data="support")],
+            [InlineKeyboardButton("🛍️ পণ্য দেখুন", callback_data="products")],
+            [InlineKeyboardButton("📞 সাপোর্ট", callback_data="support")],
         ]
         await query.edit_message_text(
-            "Nirob File Shop e swagotom!\nNiche button theke ponno dekhun.",
+            "🤖 *Nirob File Shop* এ স্বাগতম!\n\nনিচের বাটন থেকে পণ্য দেখুন।",
+            parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("/start likun othoba button use korun.")
+    await update.message.reply_text(
+        "👋 /start লিখুন অথবা বাটন ব্যবহার করুন।"
+    )
 
+# ─── MAIN ─────────────────────────────────────────────────────────────────────
 def main():
+    # Start web server in background thread
     thread = threading.Thread(target=run_web_server, daemon=True)
     thread.start()
     logger.info("Web server started on port 8080")
+
+    # Start bot
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
     logger.info("Bot started!")
     app.run_polling()
 
