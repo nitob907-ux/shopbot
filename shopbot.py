@@ -9,9 +9,21 @@ BOT_TOKEN = "8762699505:AAEZfO5dOWb_1Ne7H1bFWStuksMGk7iD4x8"
 ADMIN_USERNAME = "nirobfileshopbot"
 PAYMENT_NUMBER = "01831297268"
 PRODUCTS = {
-    "multispace": {"name": "Multispace APK", "price": 100},
-    "shelter": {"name": "Shelter APK", "price": 100},
-    "moviebox": {"name": "Movie Box APK", "price": 120},
+    "multispace": {
+        "name": "Multispace APK",
+        "price": 100,
+        "link": "https://drive.google.com/file/d/1uhCjfnukGloEGowwcE8Mg-b4qf0OeQY8/view?usp=drivesdk"
+    },
+    "shelter": {
+        "name": "Shelter APK",
+        "price": 100,
+        "link": "https://drive.google.com/file/d/1I_cmP66GgmUEjJdED2s1bEij_P4Z5hzN/view?usp=drivesdk"
+    },
+    "moviebox": {
+        "name": "Movie Box APK",
+        "price": 120,
+        "link": "https://drive.google.com/file/d/1vHj54HSfvIhyIuDzWHmLjT9LdN_LCBlM/view?usp=drivesdk"
+    },
 }
 
 logging.basicConfig(level=logging.INFO)
@@ -36,11 +48,11 @@ def run_web_server():
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("Ponno Dekhun", callback_data="products")],
-        [InlineKeyboardButton("Support", callback_data="support")],
+        [InlineKeyboardButton("🛍️ Ponno Dekhun", callback_data="products")],
+        [InlineKeyboardButton("📞 Support", callback_data="support")],
     ]
     await update.message.reply_text(
-        "Nirob File Shop e swagotom!\nNiche button theke ponno dekhun.",
+        "🤖 Nirob File Shop e swagotom!\nNiche button theke ponno dekhun o order korun.",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
@@ -49,33 +61,49 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     data = query.data
+
     if data == "products":
         keyboard = [
-            [InlineKeyboardButton(f"{p['name']} - {p['price']} TK", callback_data=f"buy_{key}")]
+            [InlineKeyboardButton(f"📦 {p['name']} - {p['price']} TK", callback_data=f"buy_{key}")]
             for key, p in PRODUCTS.items()
         ]
-        keyboard.append([InlineKeyboardButton("Back", callback_data="back")])
-        await query.edit_message_text("Amader ponnosamuho:", reply_markup=InlineKeyboardMarkup(keyboard))
+        keyboard.append([InlineKeyboardButton("🔙 Back", callback_data="back")])
+        await query.edit_message_text(
+            "🛍️ Amader ponnosamuho:\n\nKinte chaile niche button chapu.",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
     elif data.startswith("buy_"):
         key = data[4:]
         product = PRODUCTS.get(key)
         if product:
             await query.edit_message_text(
-                f"{product['name']} order korte:\n\nMullo: {product['price']} TK\n\nBkash/Nagad: {PAYMENT_NUMBER}\n\nPayment er por screenshot pathan.\nAdmin: @{ADMIN_USERNAME}",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="products")]])
+                f"✅ {product['name']} order korte:\n\n"
+                f"💰 Mullo: {product['price']} TK\n\n"
+                f"📲 Bkash/Nagad: {PAYMENT_NUMBER}\n\n"
+                f"Payment korার por screenshot pathan Admin ke.\n"
+                f"Admin: @{ADMIN_USERNAME}\n\n"
+                f"⬇️ APK download link payment er por pathano hobe.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("🔙 Back", callback_data="products")]
+                ])
             )
+
     elif data == "support":
         await query.edit_message_text(
-            f"Support:\nAdmin: @{ADMIN_USERNAME}\nBkash/Nagad: {PAYMENT_NUMBER}",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="back")]])
+            f"📞 Support:\nAdmin: @{ADMIN_USERNAME}\nBkash/Nagad: {PAYMENT_NUMBER}",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🔙 Back", callback_data="back")]
+            ])
         )
+
     elif data == "back":
         keyboard = [
-            [InlineKeyboardButton("Ponno Dekhun", callback_data="products")],
-            [InlineKeyboardButton("Support", callback_data="support")],
+            [InlineKeyboardButton("🛍️ Ponno Dekhun", callback_data="products")],
+            [InlineKeyboardButton("📞 Support", callback_data="support")],
         ]
         await query.edit_message_text(
-            "Nirob File Shop e swagotom!\nNiche button theke ponno dekhun.",
+            "🤖 Nirob File Shop e swagotom!\nNiche button theke ponno dekhun o order korun.",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
