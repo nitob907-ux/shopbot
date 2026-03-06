@@ -311,19 +311,22 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(f"📖 {PRODUCTS[key]['name']} Tutorial:\n\n{tut}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="tutorials")]]))
 
     elif data == "ws_method":
-        await query.edit_message_text(
-            f"📹 Vietnam WS Method\n\n"
-            f"✅ 100% Working Method\n"
-            f"⚡ No Setup Needed\n"
-            f"🔒 Only Use SuperVPN\n"
-            f"🤖 Auto Server\n"
-            f"👆 Anyone Can Do It\n\n"
-            f"👇 Video Tutorial dekhar jonno niche click korun:",
+        await query.message.reply_video(
+            video="BAACAgUAAyEFAASLC9FAAAMTaaqkVEnmqKLyhL2vBoAnP-OWGu0AAvEcAAJH51lVAURl3an9J2Y6BA",
+            caption=(
+                f"📹 Vietnam WS Method\n\n"
+                f"✅ 100% Working Method\n"
+                f"⚡ No Setup Needed\n"
+                f"🔒 Only Use SuperVPN\n"
+                f"🤖 Auto Server\n"
+                f"👆 Anyone Can Do It\n\n"
+                f"🎬 Step By Step Tutorial!"
+            ),
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("▶️ Video Tutorial দেখুন", url="https://t.me/Free_site10/19")],
-                [InlineKeyboardButton("🔙 Back", callback_data="main_menu")]
+                [InlineKeyboardButton("🏠 Home", callback_data="main_menu")]
             ])
         )
+        await query.delete_message()
         await query.edit_message_text(
             f"📞 Support\n\nAdmin: @{ADMIN_USERNAME}\nBkash/Nagad: {PAYMENT_NUMBER}\n\n24/7 support available! 🏆",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="main_menu")]]))
