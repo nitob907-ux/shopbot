@@ -79,6 +79,7 @@ def channel_join_keyboard():
 def main_menu_keyboard():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("🛍️ Shop Now", callback_data="products")],
+        [InlineKeyboardButton("📹 Vietnam WS Method", callback_data="ws_method")],
         [InlineKeyboardButton("📦 My Orders", callback_data="my_orders"), InlineKeyboardButton("👤 Profile", callback_data="profile")],
         [InlineKeyboardButton("💰 Add Balance", callback_data="add_balance"), InlineKeyboardButton("🎁 Referral", callback_data="referral")],
         [InlineKeyboardButton("🎰 Lucky Spin", callback_data="lucky_spin")],
@@ -309,7 +310,20 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         tut = TUTORIALS.get(key, "Tutorial paoa jaini.")
         await query.edit_message_text(f"📖 {PRODUCTS[key]['name']} Tutorial:\n\n{tut}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="tutorials")]]))
 
-    elif data == "support":
+    elif data == "ws_method":
+        await query.edit_message_text(
+            f"📹 Vietnam WS Method\n\n"
+            f"✅ 100% Working Method\n"
+            f"⚡ No Setup Needed\n"
+            f"🔒 Only Use SuperVPN\n"
+            f"🤖 Auto Server\n"
+            f"👆 Anyone Can Do It\n\n"
+            f"👇 Video Tutorial dekhar jonno niche click korun:",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("▶️ Video Tutorial দেখুন", url="https://t.me/Free_site10/19")],
+                [InlineKeyboardButton("🔙 Back", callback_data="main_menu")]
+            ])
+        )
         await query.edit_message_text(
             f"📞 Support\n\nAdmin: @{ADMIN_USERNAME}\nBkash/Nagad: {PAYMENT_NUMBER}\n\n24/7 support available! 🏆",
             reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="main_menu")]]))
@@ -330,6 +344,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     user_data = get_user(uid, user.first_name)
+
+    if update.message.video:
+        file_id = update.message.video.file_id
+        await update.message.reply_text(f"📹 Video File ID:\n`{file_id}`")
+        return
 
     if update.message.photo and uid in pending_orders:
         pkey = pending_orders.get(uid)
