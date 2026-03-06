@@ -462,6 +462,19 @@ def main():
     thread.start()
     logger.info("Web server started")
     app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    # ✅ Menu button setup
+    async def post_init(application):
+        from telegram import MenuButtonCommands, BotCommand
+        await application.bot.set_my_commands([
+            BotCommand("start", "🏪 Open Shop Menu"),
+        ])
+        await application.bot.set_chat_menu_button(
+            menu_button=MenuButtonCommands()
+        )
+
+    app.post_init = post_init
+
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("orders", orders_command))
     app.add_handler(CommandHandler("approve", approve_command))
