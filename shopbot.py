@@ -311,17 +311,19 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(f"📖 {PRODUCTS[key]['name']} Tutorial:\n\n{tut}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 Back", callback_data="tutorials")]]))
 
     elif data == "ws_method":
+        await query.edit_message_text(
+            f"📱 WhatsApp Method 100% Working ✅\n\n"
+            f"Kon method dekhte chan? 👇",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("🇻🇳 Vietnam WS Method", callback_data="send_ws_video")],
+                [InlineKeyboardButton("🔙 Back", callback_data="main_menu")]
+            ])
+        )
+
+    elif data == "send_ws_video":
         await query.message.reply_video(
             video="BAACAgUAAyEFAASLC9FAAAMTaaqkVEnmqKLyhL2vBoAnP-OWGu0AAvEcAAJH51lVAURl3an9J2Y6BA",
-            caption=(
-                f"📹 Vietnam WS Method\n\n"
-                f"✅ 100% Working Method\n"
-                f"⚡ No Setup Needed\n"
-                f"🔒 Only Use SuperVPN\n"
-                f"🤖 Auto Server\n"
-                f"👆 Anyone Can Do It\n\n"
-                f"🎬 Step By Step Tutorial!"
-            ),
+            caption="🇻🇳 Vietnam WS Method\n\n✅ 100% Working | Step By Step Tutorial 🎬",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🏠 Home", callback_data="main_menu")]
             ])
