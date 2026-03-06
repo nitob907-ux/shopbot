@@ -17,9 +17,9 @@ CHANNEL_USERNAME = "Free_site10"
 CHANNEL_LINK = "https://t.me/Free_site10"
 
 PRODUCTS = {
-    "multispace": {"name": "Multispace APK", "price": 100, "link": "https://drive.google.com/file/d/1uhCjfnukGloEGowwcE8Mg-b4qf0OeQY8/view?usp=drivesdk"},
-    "shelter": {"name": "Shelter APK", "price": 100, "link": "https://drive.google.com/file/d/1I_cmP66GgmUEjJdED2s1bEij_P4Z5hzN/view?usp=drivesdk"},
-    "moviebox": {"name": "Movie Box APK", "price": 120, "link": "https://drive.google.com/file/d/1vHj54HSfvIhyIuDzWHmLjT9LdN_LCBlM/view?usp=drivesdk"},
+    "multispace": {"name": "Multispace APK", "price": 0, "free": True, "link": "https://drive.google.com/file/d/1uhCjfnukGloEGowwcE8Mg-b4qf0OeQY8/view?usp=drivesdk"},
+    "shelter": {"name": "Shelter APK", "price": 0, "free": True, "link": "https://drive.google.com/file/d/1I_cmP66GgmUEjJdED2s1bEij_P4Z5hzN/view?usp=drivesdk"},
+    "moviebox": {"name": "Movie Box APK", "price": 100, "free": False, "link": "https://drive.google.com/file/d/1vHj54HSfvIhyIuDzWHmLjT9LdN_LCBlM/view?usp=drivesdk"},
 }
 
 TUTORIALS = {
@@ -97,7 +97,8 @@ def welcome_text(name):
         f"├ 💎 Best Prices\n"
         f"├ 🎁 Referral Rewards\n"
         f"└ 🏆 24/7 Support\n\n"
-        f"🚀 Niche theke shuru korun!"
+        f"🚀 Niche theke shuru korun!\n\n"
+        f"✅ Verified Shop | 100% Trusted 🔰"
     )
 
 
@@ -180,10 +181,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(welcome_text(query.from_user.first_name), reply_markup=main_menu_keyboard())
 
     elif data == "products":
-        keyboard = [
-            [InlineKeyboardButton(f"📦 {p['name']} - {p['price']} TK", callback_data=f"buy_{key}")]
-            for key, p in PRODUCTS.items()
-        ]
+        keyboard = []
+        for key, p in PRODUCTS.items():
+            if p.get("free"):
+                label = f"🆓 {p['name']} — FREE"
+            else:
+                label = f"📦 {p['name']} — {p['price']} TK"
+            keyboard.append([InlineKeyboardButton(label, callback_data=f"buy_{key}")])
         keyboard.append([InlineKeyboardButton("🔙 Back", callback_data="main_menu")])
         await query.edit_message_text("🛍️ Amader Products:\n\nKinte chaile select korun 👇", reply_markup=InlineKeyboardMarkup(keyboard))
 
@@ -191,11 +195,23 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         key = data[4:]
         product = PRODUCTS.get(key)
         if product:
+            # Free product — সাথে সাথে লিংক দাও
+            if product.get("free"):
+                user_data["orders"] += 1
+                if uid not in order_history:
+                    order_history[uid] = []
+                order_history[uid].append({"product": product["name"], "price": 0})
+                await query.edit_message_text(
+                    f"🆓 FREE Product!\n\n📦 {product['name']}\n\n⬇️ Download Link:\n{product['link']}\n\nDhonnobad! 🙏",
+                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Home", callback_data="main_menu")]])
+                )
+                return
+
             balance = user_data["balance"]
             pending_orders[uid] = key
             pay_needed = max(0, product["price"] - balance)
             msg = (
-                f"✅ {product['name']} Order\n\n"
+                f"📦 {product['name']} Order\n\n"
                 f"💰 Mullo: {product['price']} TK\n"
                 f"💳 Apnar Balance: {balance} TK\n"
                 f"💵 Pay korte hobe: {pay_needed} TK\n\n"
