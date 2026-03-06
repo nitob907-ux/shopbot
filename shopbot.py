@@ -3,7 +3,7 @@ import random
 import logging
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ChatMember
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 
 BOT_TOKEN = "8762699505:AAEZfO5dOWb_1Ne7H1bFWStuksMGk7iD4x8"
@@ -11,6 +11,10 @@ ADMIN_USERNAME = "nirobexe"
 ADMIN_CHAT_ID = 7809529766
 PAYMENT_NUMBER = "01831297268"
 SHOP_NAME = "NIROB FILE SHOP"
+
+# ✅ Channel join check
+CHANNEL_USERNAME = "Free_site10"
+CHANNEL_LINK = "https://t.me/Free_site10"
 
 PRODUCTS = {
     "multispace": {"name": "Multispace APK", "price": 100, "link": "https://drive.google.com/file/d/1uhCjfnukGloEGowwcE8Mg-b4qf0OeQY8/view?usp=drivesdk"},
@@ -25,9 +29,9 @@ TUTORIALS = {
 }
 
 # Database (in-memory)
-users = {}  # {user_id: {name, balance, orders, referral_code, referred_by, spin_used}}
-pending_orders = {}  # {user_id: product_key}
-order_history = {}  # {user_id: [{product, price, date}]}
+users = {}
+pending_orders = {}
+order_history = {}
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -53,6 +57,23 @@ def get_user(user_id, name="User"):
         ref_code = f"REF{user_id}"[-8:]
         users[user_id] = {"name": name, "balance": 0, "orders": 0, "referral_code": ref_code, "referred_by": None, "spin_used": False}
     return users[user_id]
+
+
+# ✅ Channel join check function
+async def is_member(bot, user_id):
+    try:
+        member = await bot.get_chat_member(chat_id=f"@{CHANNEL_USERNAME}", user_id=user_id)
+        return member.status in [ChatMember.MEMBER, ChatMember.ADMINISTRATOR, ChatMember.OWNER]
+    except Exception:
+        return False
+
+
+# ✅ Channel join prompt
+def channel_join_keyboard():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("📢 Channel Join Korun", url=CHANNEL_LINK)],
+        [InlineKeyboardButton("✅ Join Korlam, Check Korun", callback_data="check_join")],
+    ])
 
 
 def main_menu_keyboard():
@@ -84,6 +105,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     uid = user.id
 
+    # ✅ Channel join check
+    if not await is_member(context.bot, uid):
+        await update.message.reply_text(
+            f"⚠️ Bot use korte hole amader channel e join korte hobe!\n\n"
+            f"📢 Channel: {CHANNEL_LINK}\n\n"
+            f"Join korar por niche button e click korun 👇",
+            reply_markup=channel_join_keyboard()
+        )
+        return
+
     # Check referral
     if context.args and context.args[0].startswith("REF"):
         ref_code = context.args[0]
@@ -97,7 +128,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 break
 
     if user.username and user.username.lower() == ADMIN_USERNAME.lower():
-        ADMIN_CHAT_ID_local = uid
         await update.message.reply_text(
             f"👑 Admin Panel\n\n"
             f"📋 /orders - Pending orders\n"
@@ -116,6 +146,34 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     data = query.data
     uid = query.from_user.id
+
+    # ✅ Check join button
+    if data == "check_join":
+        if await is_member(context.bot, uid):
+            get_user(uid, query.from_user.first_name)
+            await query.edit_message_text(
+                welcome_text(query.from_user.first_name),
+                reply_markup=main_menu_keyboard()
+            )
+        else:
+            await query.edit_message_text(
+                f"❌ Apni abono channel e join koren nai!\n\n"
+                f"📢 Channel: {CHANNEL_LINK}\n\n"
+                f"Join korar por abar check korun 👇",
+                reply_markup=channel_join_keyboard()
+            )
+        return
+
+    # ✅ Channel check for all button actions
+    if not await is_member(context.bot, uid):
+        await query.edit_message_text(
+            f"⚠️ Bot use korte hole amader channel e join korte hobe!\n\n"
+            f"📢 Channel: {CHANNEL_LINK}\n\n"
+            f"Join korar por niche button e click korun 👇",
+            reply_markup=channel_join_keyboard()
+        )
+        return
+
     user_data = get_user(uid, query.from_user.first_name)
 
     if data == "main_menu":
@@ -244,6 +302,17 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     uid = user.id
+
+    # ✅ Channel check for messages too
+    if not await is_member(context.bot, uid):
+        await update.message.reply_text(
+            f"⚠️ Bot use korte hole amader channel e join korte hobe!\n\n"
+            f"📢 Channel: {CHANNEL_LINK}\n\n"
+            f"Join korar por /start likhun 👇",
+            reply_markup=channel_join_keyboard()
+        )
+        return
+
     user_data = get_user(uid, user.first_name)
 
     if update.message.photo and uid in pending_orders:
