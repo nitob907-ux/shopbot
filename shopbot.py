@@ -79,7 +79,7 @@ def channel_join_keyboard():
 def main_menu_keyboard():
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("🛍️ Shop Now", callback_data="products")],
-        [InlineKeyboardButton("📹 Vietnam WS Method", callback_data="ws_method")],
+        [InlineKeyboardButton("📱 WhatsApp Method 100% Working ✅", callback_data="ws_method")],
         [InlineKeyboardButton("📦 My Orders", callback_data="my_orders"), InlineKeyboardButton("👤 Profile", callback_data="profile")],
         [InlineKeyboardButton("💰 Add Balance", callback_data="add_balance"), InlineKeyboardButton("🎁 Referral", callback_data="referral")],
         [InlineKeyboardButton("🎰 Lucky Spin", callback_data="lucky_spin")],
