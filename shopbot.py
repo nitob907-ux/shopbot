@@ -200,7 +200,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = get_user(uid, query.from_user.first_name)
 
     if data == "main_menu":
-        await query.edit_message_text(welcome_text(query.from_user.first_name), reply_markup=main_menu_keyboard())
+        try:
+            await query.edit_message_text(welcome_text(query.from_user.first_name), reply_markup=main_menu_keyboard())
+        except:
+            await context.bot.send_message(chat_id=uid, text=welcome_text(query.from_user.first_name), reply_markup=main_menu_keyboard())
 
     elif data == "products":
         keyboard = []
@@ -347,33 +350,33 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_video(
             video="BAACAgUAAyEFAASLC9FAAAMTaaqkVEnmqKLyhL2vBoAnP-OWGu0AAvEcAAJH51lVAURl3an9J2Y6BA",
             caption="🇻🇳 Vietnam WS Method\n\n✅ 100% Working | Step By Step Tutorial 🎬",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Home", callback_data="main_menu")]])
         )
         await query.delete_message()
-        await context.bot.send_message(chat_id=uid, text=welcome_text(query.from_user.first_name), reply_markup=main_menu_keyboard())
 
     elif data == "video_zimbabwe":
         await query.message.reply_video(
             video="BAACAgUAAxkBAAIBimmrrQeTAAEvtyYT6oX3BRQuMrecdQACpxwAAvkCYVXrcEVBupGNWDoE",
             caption="🇿🇼 Zimbabwe WS Method\n\n✅ 100% Working | Step By Step Tutorial 🎬",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Home", callback_data="main_menu")]])
         )
         await query.delete_message()
-        await context.bot.send_message(chat_id=uid, text=welcome_text(query.from_user.first_name), reply_markup=main_menu_keyboard())
 
     elif data == "video_ivory":
         await query.message.reply_video(
             video="BAACAgUAAxkBAAIBjGmrrX77CacvxOtpYlbl3queGoIjAAKpHAAC-QJhVe08cJOqHpnROgQ",
             caption="🇨🇮 Ivory Coast WS Method\n\n✅ 100% Working | Step By Step Tutorial 🎬",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Home", callback_data="main_menu")]])
         )
         await query.delete_message()
-        await context.bot.send_message(chat_id=uid, text=welcome_text(query.from_user.first_name), reply_markup=main_menu_keyboard())
 
     elif data == "video_switzerland":
         await query.message.reply_video(
             video="BAACAgUAAxkBAAIBjmmrrnhsEPZHnAKREr5niIcis4azAAKtHAAC-QJhVarQ8TQZytLbOgQ",
             caption="🇨🇭 Switzerland WS Method\n\n✅ 100% Working | Step By Step Tutorial 🎬",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Home", callback_data="main_menu")]])
         )
         await query.delete_message()
-        await context.bot.send_message(chat_id=uid, text=welcome_text(query.from_user.first_name), reply_markup=main_menu_keyboard())
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
