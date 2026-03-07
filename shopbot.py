@@ -32,6 +32,7 @@ TUTORIALS = {
 users = {}
 pending_orders = {}
 order_history = {}
+member_cache = {}  # {user_id: (is_member, timestamp)}
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -59,11 +60,19 @@ def get_user(user_id, name="User"):
     return users[user_id]
 
 
-# ✅ Channel join check function
+# ✅ Channel join check with cache
 async def is_member(bot, user_id):
+    import time
+    now = time.time()
+    if user_id in member_cache:
+        cached_result, cached_time = member_cache[user_id]
+        if now - cached_time < 300:  # 5 মিনিট cache
+            return cached_result
     try:
         member = await bot.get_chat_member(chat_id=f"@{CHANNEL_USERNAME}", user_id=user_id)
-        return member.status in [ChatMember.MEMBER, ChatMember.ADMINISTRATOR, ChatMember.OWNER]
+        result = member.status in [ChatMember.MEMBER, ChatMember.ADMINISTRATOR, ChatMember.OWNER]
+        member_cache[user_id] = (result, now)
+        return result
     except Exception:
         return False
 
@@ -78,7 +87,7 @@ def channel_join_keyboard():
 
 def main_menu_keyboard():
     return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🛍️ Shop Now", callback_data="products")],
+        [InlineKeyboardButton("📂 All Apk File Shop", callback_data="products")],
         [InlineKeyboardButton("📱 WhatsApp Method 100% Working ✅", callback_data="ws_method")],
         [InlineKeyboardButton("📦 My Orders", callback_data="my_orders"), InlineKeyboardButton("👤 Profile", callback_data="profile")],
         [InlineKeyboardButton("💰 Add Balance", callback_data="add_balance"), InlineKeyboardButton("🎁 Referral", callback_data="referral")],
@@ -162,6 +171,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # ✅ Check join button
     if data == "check_join":
+        member_cache.pop(uid, None)  # cache clear করো
         if await is_member(context.bot, uid):
             get_user(uid, query.from_user.first_name)
             await query.edit_message_text(
